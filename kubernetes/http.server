@@ -1,0 +1,16 @@
+fjmoreno@KM-5CD242HTHV:~/GIT/jmoreno25/kubernetes$ docker run --net host -ti python:3.6-alpine sh
+Unable to find image 'python:3.6-alpine' locally
+3.6-alpine: Pulling from library/python
+59bf1c3509f3: Pull complete 
+b064415ed3d7: Pull complete 
+acb0e804800e: Pull complete 
+8786870f2876: Pull complete 
+52bedcb3e853: Pull complete 
+Digest: sha256:579978dec4602646fe1262f02b96371779bfb0294e92c91392707fa999c0c989
+Status: Downloaded newer image for python:3.6-alpine
+/ # 
+/ # python -m http.server 8081
+Serving HTTP on 0.0.0.0 port 8081 (http://0.0.0.0:8081/) ...
+127.0.0.1 - - [10/Apr/2026 11:47:45] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [10/Apr/2026 11:47:45] code 404, message File not found
+127.0.0.1 - - [10/Apr/2026 11:47:45] "GET /favicon.ico HTTP/1.1" 404 -
