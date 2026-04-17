@@ -21,3 +21,14 @@ docker ps -l
 docker exec -ti 6c0d1016237ae5858165eef453e3293662665ad687bd9b8dc0d5bd5162843c09
 
 root@KM-5CD242HTHV:/go# go run main.go
+
+- imagen docker
+jmoreno25/kubernetes/fecha_backend/backend/src/Dockerfile
+
+docker build -t go-backend .
+
+docker run -p 9090:9090 go-backend
+
+curl http://localhost:9090/
+
+- 

@@ -1,0 +1,17 @@
+<div id="frontend"></div>
+
+<script>
+var xmlhttp = new XMLHttpRequest();
+var url = "http://backend-fecha";
+
+xmlhttp.onreadystatechange = function() {
+  if (this.readyState == 4 && this.status == 200) {
+    var resp = JSON.parse(this.responseText);
+    document.getElementById("frontend").innerHTML = "<h1>La fecha es" + resp.time + "</h1>";
+  }
+};
+
+xmlhttp.open("GET", url, true);
+xmlhttp.send();
+
+</script>

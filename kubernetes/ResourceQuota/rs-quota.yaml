@@ -1,0 +1,60 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rquota
+  labels:
+    env: dev
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: res-quota
+  namespace: rquota
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: 1Gi
+    limits.cpu: "2"
+    limits.memory: 2Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+  namespace: rquota
+  labels:
+    app: backend
+  annotations:
+    kubernetes.io/change-cause: "backend ubuntu"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        system: backend-label
+        env: dev
+    spec:
+      containers:
+      - name: backend
+        image: ubuntu:latest
+        command:
+          - /bin/bash
+          - -c
+          - |
+            apt update && apt install -y python3 && \
+            python3 -m http.server 8080
+        ports:
+          - containerPort: 8080
+        resources:
+          requests:
+            memory: 500M
+            cpu: 500m
+          limits:
+            memory: 500m
+            cpu: 500m
+
