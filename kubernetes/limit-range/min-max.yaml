@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: min-max
+  labels:
+    env: dev
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: min-max
+  namespace: min-max
+spec:
+  limits:
+  - max: # max and min define the limit range
+      cpu: "1"
+      memory: 500M
+    min:
+      cpu: 100m
+      memory: 10M
+    type: Container

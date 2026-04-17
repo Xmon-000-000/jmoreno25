@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ci
+  labels:
+    env: dev
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-fecha
+  labels:
+    app: backend
+  annotations:
+    kubernetes.io/change-cause: "backend fecha"
+  namespace: ci
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        system: backend-label
+        env: dev
+    spec:
+      containers:
+      - name: backend
+        image: go-backend:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+          - containerPort: 9090
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-fecha
+  labels:
+    app: backend
+  namespace: ci
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9090
