@@ -1,0 +1,63 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: test-vol
+  labels:
+    mysql: ready
+spec:
+  storageClassName: unicornio
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mysql"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: test-claim
+spec:
+  storageClassName: unicornio
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+      mysql: ready
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+  annotations:
+    kubernetes.io/change-cause: "pvc"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+        system: mysql-label
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: "12345678"
+        volumeMounts:
+        - mountPath: "/var/lib/mysql"
+          name: mysql-vol
+      volumes:
+        - name: mysql-vol
+          persistentVolumeClaim:
+            claimName: test-claim
