@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: front
+  labels:
+    app: prueba
+    env: dev
+spec:
+  # modifica las réplicas según tu caso de uso
+  replicas: 3
+  selector:
+    matchLabels:
+      app: rs-test
+  template:
+    metadata:
+      labels:
+        app: rs-test
+    spec:
+      containers:
+      - name: nginx-template
+        image: nginx:latest
