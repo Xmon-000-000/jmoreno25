@@ -1,0 +1,24 @@
+Ejercicio 1 — Lectura de Pods + Deployments y que describe funcione (events)
+Enunciado
+En el namespace project-a existe una app. Necesitas:
+
+Crear un Role llamado workload-reader en project-a que permita:
+
+
+get, list, watch sobre:
+
+pods (core)
+deployments (apps)
+
+
+
+
+Crear un RoleBinding llamado workload-reader-binding en project-a para el usuario:
+
+
+User: jane
+
+
+Asegúrate de que el usuario puede usar kubectl describe pod sin error de “events forbidden”.
+
+✅ Restricción: solo permisos mínimos necesarios.

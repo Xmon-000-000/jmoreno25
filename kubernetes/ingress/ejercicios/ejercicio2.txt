@@ -1,0 +1,8 @@
+Ejercicio 2 — Path-based routing con rewrite (la trampa clásica)
+Enunciado
+En el namespace ing-lab2 despliega una app appv1 (nginx simple) y expón su Service ClusterIP.
+Crea un Ingress para que:
+
+http://<ingress>/appv1 llegue a la app, pero el backend reciba / (es decir, que no haga 404 al pedir /appv1).
+
+Usa ingress-nginx.

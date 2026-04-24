@@ -1,0 +1,25 @@
+Ejercicio RBAC Avanzado (con trampa)
+📌 Enunciado
+En el namespace payments existe un ConfigMap llamado app-config.
+Necesitas cumplir exactamente esto:
+
+
+Crear un ServiceAccount llamado sa-auditor en el namespace payments.
+
+
+Crear un Role llamado cm-single-reader en payments que permita al ServiceAccount:
+
+
+
+Solo lectura (get) del ConfigMap app-config
+Y nada más (no listar configmaps, no ver otros configmaps).
+
+
+
+Permitir que el mismo ServiceAccount pueda usar kubectl describe sin error de events (pero solo lectura de events, sin modificar).
+
+
+Crear un RoleBinding llamado sa-auditor-binding en payments que asigne ese Role al ServiceAccount.
+
+
+✅ Restricción: permisos mínimos.

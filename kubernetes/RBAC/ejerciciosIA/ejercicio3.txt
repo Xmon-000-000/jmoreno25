@@ -1,0 +1,21 @@
+Ejercicio 3 — Acceso a nivel de cluster (ClusterRole + ClusterRoleBinding) con mínima exposición
+Enunciado
+Necesitas dar a un usuario de auditoría acceso de lectura a recursos de cluster:
+
+Crear un ClusterRole infra-auditor que permita:
+
+
+get, list, watch sobre:
+
+nodes
+persistentvolumes
+
+
+
+
+Crear un ClusterRoleBinding infra-auditor-binding para el usuario:
+
+
+User: auditor
+
+✅ Restricción: solo lectura, nada de update/patch/create/delete.

@@ -1,0 +1,31 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: create-pod-and-deploy
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list","update","patch"]
+
+- apiGroups: ["apps"]
+  resources: ["replicasets"]
+  verbs: ["get", "watch", "list","update","patch"]
+
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "watch", "list","update","patch","create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: create-pods-and-deploy
+  namespace: default
+subjects:
+- kind: User
+  name: jmoreno
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: create-pod-and-deploy
+  apiGroup: rbac.authorization.k8s.io

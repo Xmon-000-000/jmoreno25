@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ingress-2
+  labels:
+    app: backend
+  annotations:
+    kubernetes.io/change-cause: "ingress 2"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        system: backend-label
+    spec:
+      containers:
+      - name: backend
+        image: nginx:1.29.8-alpine
+        command: ["sh","-c","echo backend en el host $HOSTNAME > /usr/share/nginx/html/index.html; nginx -g 'daemon off;'"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appv2
+  labels:
+    app: backend
+spec:
+  selector:
+    system: backend-label
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 80

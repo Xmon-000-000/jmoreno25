@@ -1,0 +1,62 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ing-lab2
+  labels:
+    name: ing-lab2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appv1
+  labels:
+    app: appv1
+  namespace: ing-lab2
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: appv1
+  template:
+    metadata:
+      labels:
+        app: appv1
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: appv1
+  namespace: ing-lab2
+spec:
+  selector:
+    app: appv1
+  ports:
+    - protocol: TCP
+      port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: appv1
+  namespace: ing-lab2
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /appv1
+        pathType: Prefix
+        backend:
+          service:
+            name: appv1
+            port:
+              number: 80
