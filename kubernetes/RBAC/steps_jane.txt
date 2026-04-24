@@ -1,0 +1,36 @@
+## RBAC
+minikube start --vm-driver=none --extra-config=apiserver.authorization-mode=RBAC
+
+## Create keys and sign
+openssl genrsa -out jane.key 2048
+openssl req -new -key jane.key -out jane.csr -subj "/CN=jane/O=dev"
+
+kubectl config view
+    certificate-authority: /home/fjane/.minikube/ca.crt
+
+sudo openssl x509 -req -in jane.csr -CA /home/fjmoreno/.minikube/ca.crt -CAkey /home/fjmoreno/.minikube/ca.key -CAcreateserial -out jane.crt -days 500
+openssl x509 -in jane.crt -noout -text
+
+kubectl config current-context
+minikube --> este user es admin
+
+## Isolated env
+kubectl config view | grep server
+docker run --rm -ti -v $PWD:/test -w /test -v /home/fjmoreno/.minikube/ca.crt:/ca.crt -v /usr/local/bin/kubectl:/usr/local/bin/kubectl alpine sh
+kubectl config view
+
+## Configure kubectl for user
+kubectl cluster-info --> para ver el server
+kubectl config set-cluster minikube --server=https://127.0.0.1:32776 --certificate-authority=/home/fjmoreno/.minikube/ca.crt
+kubectl config set-credentials jane --client-certificate=jane.crt --client-key=jane.key
+kubectl config set-context jane --cluster=minikube --user=jane
+kubectl config use-context jane
+
+------------------------------------------
+
+kubectl config get-contexts
+CURRENT   NAME         CLUSTER    AUTHINFO   NAMESPACE
+          ci.context   minikube   minikube   ci
+          jane      minikube   jane    
+*         minikube     minikube   minikube   default
+

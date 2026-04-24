@@ -1,0 +1,75 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-lab2
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-content
+  namespace: pod-lab2
+data:
+  index.html: |
+    <html>
+    <body>
+      <h1>CKA POD LAB</h1>
+    </body>
+    </html>
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: web-stack
+  namespace: pod-lab2
+spec:
+  volumes:
+  - name: shared-data
+    emptyDir: {}
+  - name: web-config
+    configMap:
+      name: web-content
+
+  initContainers:
+  - name: init-web
+    image: busybox:1.36
+    command: ["sh","-c","cp /config/index.html /usr/share/nginx/html/index.html"]
+    volumeMounts:
+    - name: web-config
+      mountPath: /config
+    - name: shared-data
+      mountPath: /usr/share/nginx/html
+
+  containers:
+  - name: nginx
+    image: nginx:stable-alpine
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: shared-data
+      mountPath: /usr/share/nginx/html
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 2
+      periodSeconds: 5
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 5
+      periodSeconds: 10
+    resources:
+      requests:
+        cpu: "200m"
+        memory: "64Mi"
+      limits:
+        cpu: "200m"
+        memory: "256Mi"
+
+  - name: sidecar
+    image: busybox:1.36
+    command: ["sh","-c","while true; do date >> /shared/status.txt; sleep 5; done"]
+    volumeMounts:
+    - name: shared-data
+      mountPath: /shared

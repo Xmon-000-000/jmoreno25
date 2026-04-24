@@ -1,0 +1,18 @@
+Ejercicio 1 — Host-based routing (2 apps, 1 Ingress Controller)
+Enunciado
+En el namespace ing-lab1 despliega dos aplicaciones HTTP:
+
+web-a que responda con “A”
+web-b que responda con “B”
+
+Crea dos Services ClusterIP (uno por app). Luego crea dos Ingress (o uno con dos reglas) para que:
+
+a.local/ → web-a
+b.local/ → web-b
+
+Usa Ingress class nginx.
+Restricciones
+
+Usar API networking.k8s.io/v1
+pathType: Prefix
+Verificar con curl usando Host header

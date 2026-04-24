@@ -1,0 +1,8 @@
+Ejercicio 2 — Permisos “solo en un namespace” usando ClusterRole predefinido (edit / view)
+Enunciado
+Tienes el namespace dev-team. Quieren:
+
+El grupo devs debe poder modificar workloads en dev-team (Deployments, Pods, Services, etc.).
+Pero NO deben poder tocar RBAC (roles/rolebindings) ni tener privilegios de cluster.
+
+✅ Restricción: No crees Roles custom si no hace falta. Usa un ClusterRole predefinido.
