@@ -1,0 +1,173 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rbac-hard
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: debug-sa
+  namespace: rbac-hard
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: rbac-hard
+  name: debug-sa-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: debug-sa-binding
+  namespace: rbac-hard
+subjects:
+- kind: ServiceAccount
+  name: debug-sa
+roleRef:
+  # "roleRef" specifies the binding to a Role / ClusterRole
+  kind: Role
+  name: debug-sa-role
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: crash-hard
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell-broken
+  namespace: crash-hard
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 3; echo OK; done"]
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: sched-hard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-hog
+  namespace: sched-hard
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: storage-hard
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: block-pv
+spec:
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: slow
+  hostPath:
+    path: "/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: block-pvc
+  namespace: storage-hard
+spec:
+  storageClassName: slow
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+  namespace: storage-hard
+spec:
+  containers:
+  - name: nginxpod
+    image: nginx:alpine
+    command: ["sh","-c","while true; do sleep 5; echo escribiendo >> /data/out.txt"]
+    volumeMounts:
+    - mountPath: /data
+      name: mydir
+  volumes:
+    - name: mydir
+      persistentVolumeClaim:
+        claimName: myclaim
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: net-hard
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api
+  namespace: net-hard
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+  namespace: net-hard
+  labels:
+    role: client
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all
+  namespace: net-hard
+spec:
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: client

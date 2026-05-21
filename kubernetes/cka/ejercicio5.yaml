@@ -1,0 +1,43 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ops-lab
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: ops-lab
+data:
+  APP_MODE: production
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: ops-lab
+  labels:
+    app: ops
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ops
+  template:
+    metadata:
+      labels:
+        app: ops
+    spec:
+      containers:
+      - name: busybox
+        image: busybox:1.36
+        command: ["sh","-c","while true; do sleep 10; echo $APP_MODE; done"]
+        ports:
+        - containerPort: 80
+        env:
+        - name: APP_MODE
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: APP_MODE

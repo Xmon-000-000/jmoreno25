@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exact-lab
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: exact-pod
+  namespace: exact-lab
+spec:
+  containers:
+  - name: nginx
+    image: busybox:1.36
+    ports:
+    - containerPort: 80
+  restartPolicy: OnFailure

@@ -1,0 +1,38 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: network-policy-a
+  namespace: net-hard
+spec:
+  podSelector:
+    matchLabels:
+      role: backend
+      app: a
+  policyTypes:
+  - Ingress
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            role: frontend
+            app: a
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: network-policy-b
+  namespace: net-hard
+spec:
+  podSelector:
+    matchLabels:
+      role: backend
+      app: b
+  policyTypes:
+  - Ingress
+  ingress:
+    - from:
+      - podSelector:
+          matchLabels:
+            role: frontend
+            app: b

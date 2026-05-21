@@ -1,0 +1,54 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: silent-fail
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: silent-fail
+data:
+  app.conf: |
+    port=8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: silent-fail
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: config
+          mountPath: /etc/app
+      volumes:
+      - name: config
+        configMap:
+          name: app-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-svc
+  namespace: silent-fail
+spec:
+  selector:
+    app: app
+  ports:
+  - port: 80
+    targetPort: 80

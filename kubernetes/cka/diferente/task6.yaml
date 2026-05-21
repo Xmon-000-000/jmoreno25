@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: job-lab
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: date-job
+  namespace: job-lab
+spec:
+  template:
+    spec:
+      containers:
+      - name: date
+        image: nginx:alpine
+        command: ["sh",  "-c", "echo `date`"]
+      restartPolicy: Never
+      tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "infra"
+        effect: "NoSchedule"

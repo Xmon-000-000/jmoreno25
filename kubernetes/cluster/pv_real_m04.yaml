@@ -1,0 +1,25 @@
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-local-real
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""   # 👈 MUY IMPORTANTE
+  local:
+    path: /mnt/local-real
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - minikube-m04
+

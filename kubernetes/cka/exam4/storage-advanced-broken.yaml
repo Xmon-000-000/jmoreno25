@@ -1,0 +1,90 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-fast
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: fast
+  hostPath:
+    path: /mnt/fast
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-slow
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: slow
+  hostPath:
+    path: /mnt/slow
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-app-a
+  namespace: storage-exam
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: fast
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-app-b
+  namespace: storage-exam
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: slow   # <- DELIBERATE ERROR
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer-a
+  namespace: storage-exam
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ["sh","-c","while true; do date >> /data/a.txt; sleep 5; done"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: pvc-app-a
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer-b
+  namespace: storage-exam
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command: ["sh","-c","while true; do date >> /data/b.txt; sleep 5; done"]
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: pvc-app-b

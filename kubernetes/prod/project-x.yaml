@@ -1,0 +1,214 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: project-x
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: builder-sa
+  namespace: project-x
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: project-x
+  name: role-config
+rules:
+- apiGroups: [""] 
+  resources: ["configmaps"]
+  verbs: ["create", "update"]
+- apiGroups: ["apps"] 
+  resources: ["deployments"]
+  verbs: ["get", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: role-binding-config
+  namespace: project-x
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: role-config
+subjects:
+- kind: ServiceAccount
+  name: builder-sa
+  namespace: project-x
+  apiGroup: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: project-x
+  labels:
+    project: x
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      project: x
+  template:
+    metadata:
+      labels:
+        project: x
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
+        env:
+          - name: APP_MESSAGE
+            valueFrom:
+              configMapKeyRef:
+                name: app-config
+                key: message
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: project
+                  operator: In
+                  values:
+                  - x
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: project-x
+data:
+  message: "Hello from Kubernetes"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: myclaim
+  namespace: project-x
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 8Gi
+  storageClassName: standard
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: logger
+  namespace: project-x
+  labels:
+    app: logger
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: logger
+  template:
+    metadata:
+      labels:
+        app: logger
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: logs
+          mountPath: /logs
+      volumes:
+        - name: logs
+          persistentVolumeClaim:
+            claimName: myclaim
+      tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "infra"
+        effect: "NoSchedule"
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 1
+            preference:
+              matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - minikube-m04
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - logger
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: project-network-policy
+  namespace: project-x
+spec:
+  podSelector:
+    matchLabels:
+      app: logger
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          project: x
+    ports:
+    - protocol: TCP
+      port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-svc
+  namespace: project-x
+spec:
+  selector:
+    project: x
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tester
+  namespace: project-x
+  labels:
+    access: allowed
+spec:
+  containers:
+  - name: nicolaka
+    image: nicolaka/netshoot
+    command: ["sh","-c","sleep 3600"]
+    ports:
+    - containerPort: 80
+---

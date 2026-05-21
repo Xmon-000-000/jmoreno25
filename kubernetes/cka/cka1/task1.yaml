@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: alpha
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: meta-pod
+  namespace: alpha
+spec:
+  containers:
+  - name: nginx
+    image: busybox:1.36
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 10; echo $MY_NODE_NAME $MY_POD_NAMESPACE; done"]
+    env:
+      - name: MY_NODE_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: spec.nodeName
+      - name: MY_POD_NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace

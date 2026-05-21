@@ -1,0 +1,50 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-core
+  labels:
+    release: "stable"
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: /mnt/core
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-core
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+  selector:
+    matchLabels:
+      release: "stable"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: core-writer
+spec:
+  containers:
+  - name: nginx
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 5; echo timestamps >> /data/out.txt; done"]
+    volumeMounts:
+    - name: miclaim
+      mountPath: /data
+  volumes:
+  - name: miclaim
+    persistentVolumeClaim:
+      claimName: pvc-core

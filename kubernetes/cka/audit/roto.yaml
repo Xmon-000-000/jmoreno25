@@ -1,0 +1,23 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calculator
+  namespace: compute
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calculator
+  template:
+    metadata:
+      labels:
+        app: calculator
+    spec:
+      containers:
+      - name: app
+        image: busybox
+        command: ["sh","-c","echo Result is: $RESULT; sleep 3600"]
+        envFrom:
+          - configMapRef:
+              name: myconfigmap

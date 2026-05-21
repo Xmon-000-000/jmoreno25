@@ -1,0 +1,140 @@
+ "}{---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: prod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        image: nginx
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: prod
+spec:
+  selector:
+    app: frontend
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-net-pol
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: frontend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: kube-system
+    - to:
+      - podSelector:
+          matchLabels:
+            app: backend
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-net-pol
+  namespace: prod
+spec:
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: TCP
+          port: 443
+        - protocol: UDP
+          port: 53
+    - to:
+      - ipBlock:
+          cidr: 104.20.26.136/32
+      - ipBlock:
+          cidr: 172.66.157.237/32
+      ports:
+      - protocol: TCP
+        port: 443
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: prod
+data:
+  default.conf: |
+    server {
+      listen 80;
+
+      location / {
+        proxy_pass http://backend-svc;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+      }
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: prod
+data:
+  default.conf: |
+    server {
+      listen 80;
+
+      # 1️⃣ Resolver DNS del cluster (CoreDNS)
+      resolver kube-dns.kube-system.svc.cluster.local valid=10s;
+
+      location / {
+        proxy_pass https://example.org;
+
+        # 2️⃣ SNI para HTTPS
+        proxy_ssl_server_name on;
+        #proxy_ssl_verify off;
+
+
+         proxy_ssl_server_name on;
+         proxy_ssl_name example.org;
+
+         # Host correcto hacia el upstream
+         proxy_set_header Host example.org;
+
+        proxy_set_header X-Real-IP $remote_addr;
+      }
+    }

@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secret-lab2
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-credentials
+  namespace: secret-lab2
+type: Opaque
+stringData:
+  username: admin
+  token: t0k3n123
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: api-client
+  namespace: secret-lab2
+spec:
+  containers:
+  - name: busybox
+    image: busybox:1.36
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 20; echo $API_USER $API_TOKEN; done"]
+    env:
+      - name: API_USER
+        valueFrom:
+          secretKeyRef:
+            name: api-credentials
+            key: username
+      - name: API_TOKEN
+        valueFrom:
+          secretKeyRef:
+            name: api-credentials
+            key: token

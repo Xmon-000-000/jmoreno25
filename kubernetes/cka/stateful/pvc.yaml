@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logger-pvc
+  namespace: stateful-lab
+spec:
+  accessModes:
+  - ReadWriteOncePod
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: pod1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logger-pvc2
+  namespace: stateful-lab
+spec:
+  accessModes:
+  - ReadWriteOncePod
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: pod2

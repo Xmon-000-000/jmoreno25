@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: corp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: busybox
+        command: ["sh","-c","echo MODE=$MODE; sleep 3600"]
+        envFrom:
+          - configMapRef:
+              name: backend-config
+        env:
+        - name: API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: API_KEY
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: corp
+data:
+    MODE: production

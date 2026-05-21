@@ -1,0 +1,31 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apps
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-guard
+  namespace: apps
+  labels:
+    app.kubernetes.io/name: MyApp
+spec:
+  containers:
+  - name: myapp-container
+    image: busybox:1.28
+    command: ['sh', '-c', 'while true; do sleep 10; cat /state/flag; done']
+    volumeMounts:
+      - mountPath: /state
+        name: test-volume
+  initContainers:
+  - name: init-myservice
+    image: busybox:1.28
+    command: ['sh', '-c','echo READY /state/flag;']
+    volumeMounts:
+      - mountPath: /state
+        name: test-volume
+  volumes:
+    - name: test-volume
+      emptyDir: {}

@@ -1,0 +1,38 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: data-loss-lab
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: app
+  namespace: data-loss-lab
+spec:
+  replicas: 1
+  serviceName: app
+  selector:
+    matchLabels:
+      app: app
+  template:
+    metadata:
+      labels:
+        app: app
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        volumeMounts:
+        - mountPath: /data
+          name: data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+
