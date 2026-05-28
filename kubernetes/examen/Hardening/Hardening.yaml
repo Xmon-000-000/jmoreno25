@@ -1,0 +1,169 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: arena
+  labels:
+    env: lab
+    team: blue
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/warn: restricted
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-limits
+  namespace: arena
+spec:
+  limits:
+  - default: # this section defines default limits
+      cpu: 300m
+      memory: 256Mi
+    defaultRequest: # this section defines default requests
+      cpu: 100m
+      memory: 128Mi
+    type: Container
+--- 
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: arena-quota
+  namespace: arena
+spec:
+  hard:
+    requests.cpu: "1"
+    requests.memory: "1Gi"
+    pods: "6"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: site-content
+  namespace: arena
+data:
+  index.html: |
+    <h1>ARENA OK</h1>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: arena
+  labels:
+    app: web
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - web
+              topologyKey: kubernetes.io/hostname
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        runAsNonRoot: true
+      topologySpreadConstraints:
+        - maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+          topologyKey: kubernetes.io/hostname
+          labelSelector:
+            matchLabels:
+              app: web
+      containers:
+      - name: nginx
+        image: httpd:2.4
+        ports:
+        - containerPort: 80
+          name: port-pod
+        securityContext:
+          allowPrivilegeEscalation: false
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: config
+          mountPath: "/usr/local/apache2/htdocs/index.html"
+          subPath: index.html
+        - name: cache-volume
+          mountPath: /usr/local/apache2/logs
+      volumes:
+      # You set volumes at the Pod level, then mount them into containers inside that Pod
+      - name: config
+        configMap:
+          name: site-content
+      - name: cache-volume
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-svc
+  namespace: arena
+spec:
+  selector:
+    app: web
+  ports:
+  - name: svc-port
+    protocol: TCP
+    port: 80
+    targetPort: port-pod
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: web-pdb 
+  namespace: arena
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: web
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cm-writer
+  namespace: arena
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: arena
+  name: writer-role
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["configmaps"]
+  verbs: ["get", "watch", "list","create","update","patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: binding-writer
+  namespace: arena
+subjects:
+- kind: ServiceAccount
+  name: cm-writer
+roleRef:
+  kind: Role 
+  name: writer-role
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,2 @@
+Has instalado mysql
+namespace: {{ .Values.namespace }}

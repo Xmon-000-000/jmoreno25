@@ -1,0 +1,157 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pipeline-lab
+  labels:
+    name: pipeline-lab
+    purpose: exam
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: default
+  namespace: pipeline-lab
+automountServiceAccountToken: false
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: worker-script
+  namespace: pipeline-lab
+data:
+  run.sh: |
+    #!/bin/sh
+    echo "worker: $(hostname)"
+    date
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: processor
+  namespace: pipeline-lab
+  labels:
+    app: processor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: processor
+  template:
+    metadata:
+      labels:
+        app: processor
+    spec:
+      securityContext:
+        runAsUser: 1000
+        runAsNonRoot: true
+      initContainers:
+      - name: init-myservice
+        image: busybox:1.36
+        command: ["sh","-c","cp /tmp/run.sh /work; chmod 755 /work/run.sh;"]
+        volumeMounts:
+        - mountPath: /work
+          name: cache-volume
+        - name: run
+          mountPath: /tmp/run.sh
+          subPath: run.sh
+        securityContext:
+          allowPrivilegeEscalation: false
+      containers:
+      - name: busybox
+        image: busybox:1.36
+        ports:
+        - containerPort: 80
+        command: ["sh","-c","cat /work/run.sh; while true; do sleep 100; done"]
+        volumeMounts:
+        - mountPath: /work
+          name: cache-volume
+        securityContext:
+          allowPrivilegeEscalation: false
+      volumes:
+      - name: cache-volume
+        emptyDir: {}
+      - name: run
+        configMap:
+          name: worker-script
+          items:
+            - key: run.sh
+              path: run.sh
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: processor-svc
+  namespace: pipeline-lab
+spec:
+  selector:
+    app: processor
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: job-runner
+  namespace: pipeline-lab
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: pipeline-lab
+  name: r-processosr
+rules:
+- apiGroups: ["batch/v1"] 
+  resources: ["jobs"]
+  verbs: ["get", "list","create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: binding-processor
+  namespace: pipeline-lab
+subjects:
+- kind: ServiceAccount
+  name: job-runner
+roleRef:
+  kind: Role 
+  name: r-processosr
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: launch-check
+  namespace: pipeline-lab
+spec:
+  template:
+    spec:
+      serviceAccountName: job-runner
+      containers:
+      - name: job-processor
+        image: hashicorp/http-echo
+        command: ["sh","-c","sal=0; for i in {1..5}; do if `curl -o /dev/null -s -w %{http_code} http://processor-svc:8080/health` ne 200; then $sal++; fi; sleep 2; done"]
+      restartPolicy: Never
+  backoffLimit: 1
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: test-network-policy
+  namespace: pipeline-lab
+spec:
+  podSelector:
+    matchLabels:
+      app: processor
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          access: internal
+    ports:
+    - protocol: TCP
+      port: 8080
