@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: init-lab
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-fail
+  namespace: init-lab
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+  initContainers:
+  - name: init-myservice
+    image: busybox:stable
+    command: ["sh","-c","ls"]
+  tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "infra"
+    effect: "NoSchedule"

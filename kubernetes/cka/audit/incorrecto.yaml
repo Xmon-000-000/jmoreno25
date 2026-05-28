@@ -1,0 +1,16 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: batch-runner
+  namespace: compute
+  labels:
+    app: batch
+spec:
+  template:
+    spec:
+      containers:
+      - name: worker
+        image: busybox
+        command: ["sh","-c","echo Processing once; sleep 5"]
+      restartPolicy: Never

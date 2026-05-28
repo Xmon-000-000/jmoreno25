@@ -1,0 +1,111 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cp-lab
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: churn-sa
+  namespace: cp-lab
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: churn-role
+  namespace: cp-lab
+rules:
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create","update","patch","get","list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: churn-bind
+  namespace: cp-lab
+subjects:
+- kind: ServiceAccount
+  name: churn-sa
+  namespace: cp-lab
+roleRef:
+  kind: Role
+  name: churn-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: etcd-churn
+  namespace: cp-lab
+  labels:
+    app: etcd-churn
+spec:
+  serviceAccountName: churn-sa
+  restartPolicy: Always
+  containers:
+  - name: churn
+    image: nicolaka/netshoot
+    command: ["sh","-c"]
+    args:
+      - |
+        set -e
+        API="https://kubernetes.default.svc"
+        TOKEN="$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"
+        CACERT="/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"
+        i=0
+        while true; do
+          name="cm-$((i%300))"
+          # create-or-update configmaps rapidly (etcd write pressure)
+          curl -sS --cacert "$CACERT" -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -X PUT "$API/api/v1/namespaces/cp-lab/configmaps/$name" \
+            -d "{\"apiVersion\":\"v1\",\"kind\":\"ConfigMap\",\"metadata\":{\"name\":\"$name\"},\"data\":{\"payload\":\"$(date +%s%N)-$i\"}}" >/dev/null || true
+          i=$((i+1))
+          # read pressure too
+          curl -sS --cacert "$CACERT" -H "Authorization: Bearer $TOKEN" \
+            "$API/api/v1/namespaces/kube-system/pods?limit=200" >/dev/null || true
+          sleep 0.05
+        done
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: noisy-neighbor
+  namespace: kube-system
+  labels:
+    app: noisy-neighbor
+spec:
+  # Force it onto the control-plane node (minikube node name is typically "minikube")
+  nodeSelector:
+    kubernetes.io/hostname: minikube
+  tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+  - key: "node.kubernetes.io/not-ready"
+    operator: "Exists"
+    effect: "NoExecute"
+  containers:
+  - name: cpu-io
+    image: alpine:3.19
+    command: ["sh","-c"]
+    args:
+      - |
+        # CPU + disk I/O pressure (simulate noisy neighbor on control plane)
+        apk add --no-cache coreutils >/dev/null 2>&1 || true
+        while true; do
+          # CPU burn
+          sha256sum /dev/zero | head -n 5000 >/dev/null 2>&1 || true
+          # I/O burn (sync writes)
+          dd if=/dev/zero of=/tmp/blob bs=1M count=256 conv=fdatasync >/dev/null 2>&1 || true
+          rm -f /tmp/blob >/dev/null 2>&1 || true
+        done
+    resources:
+      requests:
+        cpu: "50m"
+        memory: "64Mi"
+      limits:
+        cpu: "1500m"
+        memory: "256Mi"

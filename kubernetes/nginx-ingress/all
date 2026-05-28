@@ -1,0 +1,493 @@
+NAME: my-redis
+LAST DEPLOYED: Wed May 27 10:21:26 2026
+NAMESPACE: default
+STATUS: deployed
+REVISION: 1
+CHART: redis
+VERSION: 0.29.2
+APP_VERSION: 8.6.3
+DESCRIPTION: Install complete
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+null
+
+COMPUTED VALUES:
+affinity: {}
+architecture: standalone
+auth:
+  acl:
+    enabled: false
+    existingFilePath: ""
+    existingSecret: ""
+    existingSecretACLKey: ""
+  enabled: true
+  existingSecret: ""
+  existingSecretPasswordKey: redis-password
+  password: ""
+  sentinel: true
+cluster:
+  announceHostnames: false
+  config:
+    nodeTimeout: 15000
+    requireFullCoverage: true
+  startupSleepTime: 0
+clusterDomain: cluster.local
+clusterInitJob:
+  resources: {}
+clusterReplicaCount: 0
+common:
+  global:
+    imagePullSecrets: []
+    imageRegistry: ""
+commonAnnotations: {}
+commonLabels: {}
+config:
+  content: |
+    # Redis configuration
+    bind * -::*
+  existingConfigmap: ""
+  existingConfigmapKey: ""
+  mountPath: /usr/local/etc/redis
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  privileged: false
+  readOnlyRootFilesystem: true
+  runAsGroup: 999
+  runAsNonRoot: true
+  runAsUser: 999
+  seccompProfile:
+    type: RuntimeDefault
+customScripts:
+  postStart:
+    command: []
+    enabled: false
+  preStop:
+    command: []
+    enabled: false
+extraConfig: ""
+extraEnvVars: []
+extraFlags: []
+extraObjects: []
+extraPorts: []
+extraVolumeMounts: []
+extraVolumes: []
+fullnameOverride: ""
+global:
+  imagePullSecrets: []
+  imageRegistry: ""
+image:
+  pullPolicy: Always
+  registry: docker.io
+  repository: redis
+  tag: 8.6.3@sha256:4d25e2fe601f7ffaeb4437cb6ced3518bc36edf34ebe98863c80836943d94529
+initContainer:
+  resources: {}
+ipFamily: auto
+livenessProbe:
+  enabled: true
+  failureThreshold: 6
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+metrics:
+  enabled: false
+  extraArgs: []
+  image:
+    pullPolicy: Always
+    registry: docker.io
+    repository: oliver006/redis_exporter
+    tag: v1.82.0-alpine@sha256:da9e89ee4e755bfa1b6a6b2ed345c2de63ca3976f95c9f1e9538882bc1414cb8
+  resources: {}
+  service:
+    annotations: {}
+    clusterIP: ""
+    ipFamilies: []
+    ipFamilyPolicy: ""
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    nodePort: ""
+    port: 9121
+    type: ClusterIP
+  serviceMonitor:
+    annotations: {}
+    enabled: false
+    honorLabels: false
+    interval: 30s
+    metricRelabelings: []
+    namespace: ""
+    namespaceSelector: {}
+    relabelings: []
+    scrapeTimeout: ""
+    selector: {}
+nameOverride: ""
+namespaceOverride: ""
+networkPolicy:
+  allowExternal: true
+  egressEnabled: true
+  enabled: false
+  extraEgress: []
+  extraIngress: []
+nodeSelector: {}
+pdb:
+  enabled: false
+  maxUnavailable: ""
+  minAvailable: 1
+persistence:
+  accessMode: ReadWriteOnce
+  annotations: {}
+  enabled: true
+  existingClaim: ""
+  mountPath: /data
+  size: 8Gi
+  storageClass: ""
+  subPath: ""
+persistentVolumeClaimRetentionPolicy:
+  enabled: false
+  whenDeleted: Retain
+  whenScaled: Retain
+podAnnotations: {}
+podLabels: {}
+podSecurityContext:
+  fsGroup: 999
+priorityClassName: ""
+readinessProbe:
+  enabled: true
+  failureThreshold: 6
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+replicaCount: 3
+resources: {}
+revisionHistoryLimit: 10
+sentinel:
+  config:
+    announceHostnames: true
+    loglevel: notice
+  discoveryTimeout: 3
+  downAfterMilliseconds: 1500
+  enabled: false
+  extraVolumeMounts: []
+  failoverTimeout: 15000
+  image:
+    pullPolicy: Always
+    registry: docker.io
+    repository: redis
+    tag: 8.6.1@sha256:1c054d54ecd1597bba52f4304bca5afbc5565ebe614c5b3d7dc5b7f8a0cd768d
+  livenessProbe:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  masterName: mymaster
+  masterService:
+    annotations: {}
+    checkInterval: 60
+    enabled: false
+    image:
+      pullPolicy: IfNotPresent
+      repository: alpine/kubectl
+      tag: 1.35.2
+    ipFamilies: []
+    ipFamilyPolicy: ""
+    resources: {}
+    type: ""
+    verbose: false
+  monitorTarget: ""
+  parallelSyncs: 1
+  port: 26379
+  preStop:
+    enabled: true
+  quorum: 2
+  readinessProbe:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  redisShutdownWaitFailover: true
+  resources: {}
+  service:
+    ipFamilies: []
+    ipFamilyPolicy: ""
+    port: 26379
+    type: ClusterIP
+service:
+  annotations: {}
+  clusterPort: 16379
+  headless:
+    annotations: {}
+    ipFamilies: []
+    ipFamilyPolicy: ""
+  ipFamilies: []
+  ipFamilyPolicy: ""
+  nodePort: ""
+  port: 6379
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  automountServiceAccountToken: false
+  create: false
+  name: ""
+startupProbe:
+  enabled: false
+  failureThreshold: 30
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+terminationGracePeriodSeconds: 30
+tls:
+  authClients: true
+  certCAFilename: ca.crt
+  certFilename: tls.crt
+  certKeyFilename: tls.key
+  client:
+    certFilename: tls.crt
+    certKeyFilename: tls.key
+    existingSecret: ""
+  enabled: false
+  existingSecret: ""
+  port: 6380
+tolerations: []
+topologySpreadConstraints: []
+updateStrategy:
+  rollingUpdate:
+    maxUnavailable: 1
+  type: RollingUpdate
+useDeployment: false
+volumePermissions:
+  enabled: false
+  image:
+    pullPolicy: IfNotPresent
+    registry: docker.io
+    repository: busybox
+    tag: 1.36.1
+  resources: {}
+
+HOOKS:
+MANIFEST:
+---
+# Source: redis/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: my-redis
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: my-redis
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.6.3
+    helm.sh/chart: redis-0.29.2
+type: Opaque
+data:
+  redis-password: "UVcxZmhGM0s2WlJNb0JmTA=="
+  host: "bXktcmVkaXMuZGVmYXVsdC5zdmM="
+  port: "NjM3OQ=="
+  username: "ZGVmYXVsdA=="
+  uri: "cmVkaXM6Ly9kZWZhdWx0OlFXMWZoRjNLNlpSTW9CZkxAbXktcmVkaXMuZGVmYXVsdC5zdmM6NjM3OQ=="
+---
+# Source: redis/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-redis-config
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: my-redis
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.6.3
+    helm.sh/chart: redis-0.29.2
+data:
+  redis.conf: |
+    # Redis configuration
+    bind * -::*
+    
+    # Standard Port Configuration
+    port 6379
+---
+# Source: redis/templates/headless-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-redis-headless
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: my-redis
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.6.3
+    helm.sh/chart: redis-0.29.2
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - port: 6379
+      targetPort: redis
+      protocol: TCP
+      name: tcp-redis
+  selector:
+    app.kubernetes.io/instance: my-redis
+    app.kubernetes.io/name: redis
+
+---
+# Source: redis/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-redis
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: my-redis
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.6.3
+    helm.sh/chart: redis-0.29.2
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: redis
+      protocol: TCP
+      name: tcp-redis
+  selector:
+    app.kubernetes.io/instance: my-redis
+    app.kubernetes.io/name: redis
+---
+# Source: redis/templates/statefulset.yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: my-redis
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: my-redis
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/version: 8.6.3
+    helm.sh/chart: redis-0.29.2
+spec:
+  serviceName: my-redis-headless
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: my-redis
+      app.kubernetes.io/name: redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: my-redis
+        app.kubernetes.io/name: redis
+      annotations:
+        checksum/config: 294a093cafef93d0e0b2d399b0d11a262d7f8618f7bfb84afaec0e75430a3dee
+    spec:
+      securityContext: 
+        fsGroup: 999
+      automountServiceAccountToken: false
+      serviceAccountName: default
+      containers:
+        - name: redis
+          securityContext: 
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 999
+            runAsNonRoot: true
+            runAsUser: 999
+            seccompProfile:
+              type: RuntimeDefault
+          image: "docker.io/redis:8.6.3@sha256:4d25e2fe601f7ffaeb4437cb6ced3518bc36edf34ebe98863c80836943d94529"
+          imagePullPolicy: Always
+          command:
+            - /bin/sh
+            - -c
+            - |
+              CONFIG_FILE="/usr/local/etc/redis/redis.conf"
+
+              redis-server "$CONFIG_FILE" --requirepass "${REDIS_PASSWORD}"
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: my-redis
+                  key: redis-password
+            - name: REDISCLI_AUTH
+              valueFrom:
+                secretKeyRef:
+                  name: my-redis
+                  key: redis-password
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  
+                  redis-cli -h "127.0.0.1" ping
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  
+                  redis-cli -h "127.0.0.1" ping 
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+          resources:
+            {}
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: config
+              mountPath: /usr/local/etc/redis
+      volumes:
+        - name: config
+          configMap:
+            name: my-redis-config
+      terminationGracePeriodSeconds: 30
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: data
+        labels:
+          app.kubernetes.io/instance: my-redis
+          app.kubernetes.io/name: redis
+      spec:
+        accessModes:
+          - "ReadWriteOnce"
+        resources:
+          requests:
+            storage: "8Gi"
+
+

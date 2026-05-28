@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-determinista-fast
+  namespace: selector-lab
+spec:
+  storageClassName: "" 
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: ""
+  selector:
+    matchLabels:
+      disk: fast
+  accessModes:
+    - ReadWriteOnce

@@ -1,0 +1,36 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cka-a
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myconfigmap
+  namespace: cka-a
+data:
+  APP_MODE: production
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: env-pod
+  namespace: cka-a
+spec:
+  containers:
+  - name: nginx
+    image: busybox:1.36
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 10; echo $APP_MODE file cat /etc/config/config.txt; done"]
+    envFrom:
+      - configMapRef:
+          name: myconfigmap
+    volumeMounts:
+    - name: foo
+      mountPath: "/etc/config"
+  volumes:
+  - name: foo
+    configMap:
+      name: app-config

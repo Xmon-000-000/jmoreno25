@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-app
+  namespace: scheduling-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-app
+  template:
+    metadata:
+      labels:
+        app: local-app
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - minikube
+      containers:
+      - name: app
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          echo "Writing on $(hostname)"
+          while true; do
+            date >> /data/log.txt
+            sleep 5
+          done
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: local-pvc

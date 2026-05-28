@@ -1,0 +1,123 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fix-me
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: broken-sa
+  namespace: fix-me
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: broken-role
+  namespace: fix-me
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get","list","watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: broken-binding
+  namespace: fix-me
+subjects:
+- kind: ServiceAccount
+  name: broken-sa
+roleRef:
+  kind: Role
+  name: broken-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: broken-app
+  namespace: fix-me
+  labels:
+    app: correct
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: correct
+  template:
+    metadata:
+      labels:
+        app: correct
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: broken-svc
+  namespace: fix-me
+spec:
+  selector:
+    app: correct
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: broken-pvc
+  namespace: fix-me
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-app
+  namespace: fix-me
+  labels:
+    app: storage
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: storage
+  template:
+    metadata:
+      labels:
+        app: storage
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - minikube-m03
+      containers:
+      - name: app
+        image: busybox
+        command: ["sh","-c","sleep 3600"]
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: broken-pvc

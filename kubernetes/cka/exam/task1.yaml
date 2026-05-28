@@ -1,0 +1,231 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: meta
+  namespace: exam
+spec:
+  containers:
+    - name: test-container
+      image:  busybox:1.36
+      command: [ "sh", "-c"]
+      args:
+      - while true; do
+          echo -en '\n';
+          printenv MY_NODE_NAME MY_POD_NAME;
+          sleep 10;
+        done;
+      env:
+        - name: MY_NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shared
+  namespace: exam
+spec:
+  containers:
+  - name: writer
+    image: busybox:stable
+    command: ["sh","-c","while true; do echo `date` >> /data/time.txt; sleep 10; done"]
+    volumeMounts:
+    - mountPath: /data
+      name: data-read-write
+  - name: read
+    image: busybox:stable
+    command: ["sh","-c","while true; do sleep 10; cat /data/time.txt; done"]
+    volumeMounts:
+    - mountPath: /data
+      name: data-read-write
+      readOnly: true  
+  volumes:
+  - name: data-read-write
+    hostPath:
+      path: /data 
+      type: Directory
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: init-check
+  namespace: exam
+spec:
+  initContainers:
+  - name: init-myservice
+    image: busybox:1.28
+    command: ["sh","-c","echo READY /state/status;"]
+    volumeMounts:
+    - mountPath: /state
+      name: example-volume
+  containers:
+  - name: example-container
+    image: nginx:stable
+    command: ["sh","-c","while true; do sleep 50; cat /state/status; done"]
+    volumeMounts:
+    - mountPath: /state
+      name: example-volume
+  volumes:
+  - name: example-volume
+    hostPath:
+      path: /data
+      type: Directory
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: frontend
+ namespace: exam
+ labels:
+   app: nginx
+spec:
+ replicas: 3
+ selector:
+   matchLabels:
+     app: nginx
+ template:
+   metadata:
+     labels:
+       app: nginx
+   spec:
+     containers:
+     - name: nginx
+       image: nginx:1.14.2
+       ports:
+       - containerPort: 80
+ strategy:
+   type: RollingUpdate
+   rollingUpdate:
+     maxUnavailable: 1
+     maxSurge: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: exam
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-exam
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: mio
+  hostPath:
+    path: "/mnt/exam"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-exam
+  namespace: exam
+spec:
+  storageClassName: mio
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: storage
+  namespace: exam
+spec:
+  volumes:
+    - name: task-pv-storage
+      persistentVolumeClaim:
+        claimName: pvc-exam
+  containers:
+    - name: task-pv-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/data"
+          name: task-pv-storage
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-ingress
+  namespace: exam
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pending
+  namespace: exam
+spec:
+  volumes:
+    - name: task-pv-storage
+      persistentVolumeClaim:
+        claimName: task-pv-claim
+  containers:
+    - name: task-pv-container
+      image: nginx
+      ports:
+        - containerPort: 80
+          name: "http-server"
+      volumeMounts:
+        - mountPath: "/usr/share/nginx/html"
+          name: task-pv-storage
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: task-pv-claim
+  namespace: exam
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-exam2
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: "/mnt/exam2"

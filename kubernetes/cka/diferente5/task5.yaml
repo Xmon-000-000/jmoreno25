@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cka-c
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken
+  namespace: cka-c
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 10; echo OK; done"]

@@ -1,0 +1,189 @@
+Pregunta 1:
+Your organization has a security requirement that pods in dev namespaces must
+not be able to talk to pods in prod namespaces, except to a shared DNS and
+logging service. In a scenario-based design, explain how you would define and
+enforce NetworkPolicies to implement this segmentation, including how you would
+handle default-deny policies, allowed egress to DNS/logging, and how you would
+validate the policy behavior without accidentally breaking essential cluster
+communications.
+
+Pregunta 2:
+You are supporting two workloads: (a) a PostgreSQL StatefulSet that must have a
+dedicated writable volume per replica, and (b) a media processing Deployment
+that needs to share the same dataset read-only across many pods in multiple
+nodes. In one scenario-based design, explain how you would choose volume types
+and access modes for each workload, how the PVC specs would differ, and how you
+would validate that the selected access modes (e.g., RWO/ROX/RWX) match the
+underlying provisioned storage behavior.
+
+Pregunta 3:
+A development team complains that when they delete a PVC used by a test
+namespace, sometimes the backing storage is deleted immediately, and other times
+it remains orphaned and costs money. They want predictable behavior: test
+environments should delete storage automatically, but production databases must
+preserve data even if the PVC is accidentally removed. As the cluster
+administrator, what reclaim policies would you configure, how would you apply
+them through different StorageClasses, and what operational process would you
+define to manage PV lifecycle safely in production?
+
+Pregunta 4:
+During a deployment surge, the kube-system namespace shows multiple restarts of
+critical components, and the API server sometimes becomes slow even though it is
+not down. In a real-life troubleshooting approach, describe how you would
+troubleshoot cluster components such as the API server, etcd, controller-
+manager, and scheduler by correlating symptoms with component logs, identifying
+bottlenecks (like etcd latency), and verifying whether resource limits or
+underlying disk I/O constraints are causing instability.
+
+Pregunta 5:
+A security patch is applied, and shortly after that several nodes start
+rejecting workloads, with events mentioning image pull failures and container
+runtime errors. The nodes still show Ready, but pods fail to start or crash
+immediately. In a scenario-based investigation, describe how you would
+troubleshoot nodes and cluster components to determine whether the root cause is
+container runtime configuration, registry connectivity, kubelet-to-runtime
+communication problems, or node-level DNS and networking issues affecting image
+pulls.
+
+Pregunta 6:
+You receive alerts that etcd is healthy, but the cluster behaves as if it is
+“forgetting” resources new deployments appear briefly and then vanish, and
+watchers behave unpredictably. In a deep troubleshooting scenario, explain how
+you would validate cluster component consistency, identify whether control-plane
+components are out of sync, check for etcd performance degradation or quota
+issues, and confirm whether API server caching or leader-election problems are
+contributing to the unstable state.
+
+Pregunta 7:
+Application teams complain that their services are slow, but node metrics show
+normal CPU usage, and there are no obvious errors in application logs. In a
+monitoring-focused scenario, explain how you would monitor and diagnose cluster
+and application resource usage, including how you would detect memory pressure,
+throttling due to CPU limits, disk I/O saturation, or network contention, and
+how you would prove whether the issue is in Kubernetes resource configuration
+versus external dependencies.
+
+Pregunta 8:
+Several pods are being OOMKilled across multiple namespaces, but the nodes still
+show sufficient free memory. Teams claim they set “reasonable” limits, yet the
+problem persists. In a real troubleshooting scenario, describe how you would
+monitor cluster and application resource usage to identify whether the OOMKills
+are due to container limits, node memory eviction thresholds, misreported memory
+usage, or memory leaks, and how you would determine whether adjusting
+requests/limits or scaling nodes is the correct fix.
+
+Pregunta 9:
+A payment processing application needs database credentials, API tokens, and TLS
+certificates, and auditors require that secrets are not stored in plain text in
+Git or exposed through accidental logging. In a scenario-based design, explain
+how you would use Secrets to configure the application securely, how you would
+deliver the sensitive values to the containers (environment variables vs mounted
+volumes), and how you would plan a credential rotation workflow that triggers a
+controlled rolling update while minimizing the chance of downtime.
+
+Pregunta 10:
+A company runs a web app that reads configuration from both ConfigMaps and
+Secrets, but after a recent config change the pods started, yet the app behaved
+as if it was still using old values. The team suspects the rollout didn’t pick
+up the updated ConfigMap/Secret data. In a practical troubleshooting scenario,
+explain how you would verify what config the running pods are actually
+consuming, how you would force a controlled rolling update when configuration
+changes, and how you would design the deployment so config changes are reliably
+applied and rollback-friendly.
+
+Pregunta 11:
+Your organization wants to enable autoscaling for a CPU-heavy API service that
+experiences unpredictable traffic spikes, but they also want to avoid thrashing
+(rapid scale up/down) and keep costs under control. In a real scenario, explain
+how you would configure workload autoscaling for this Deployment, what resource
+requests/limits must be set for autoscaling to behave correctly, how you would
+choose scaling thresholds and stabilization behavior, and how you would validate
+the autoscaler’s decisions during a live traffic surge.
+
+Pregunta 12:
+Your company is expanding and wants a standardized way to onboard new teams into
+the cluster with consistent permissions: each team gets a namespace, can manage
+most workload resources within it, but must not touch cluster-critical
+components, and a small SRE group should retain cluster-admin capabilities. In a
+practical design scenario, explain how you would structure RBAC using reusable
+ClusterRoles (or aggregated roles), namespace-scoped RoleBindings for teams, and
+separate elevated bindings for SRE, and how you would implement guardrails so
+teams cannot grant themselves additional privileges through RBAC changes.
+
+Pregunta 13:
+A kubeadm cluster that has been running for months needs to be upgraded to a
+newer Kubernetes version with minimal disruption, and you must ensure workloads
+stay available throughout. In a realistic operations scenario, describe how you
+would plan and execute the upgrade process for control plane and workers using
+kubeadm (version skew rules, draining strategy, sequencing of nodes, updating
+kubeadm/kubelet/kubectl packages, and verifying critical add-ons like CoreDNS
+and CNI compatibility), and how you would validate cluster health before,
+during, and after the upgrade.
+
+Pregunta 14:
+You need to add a new worker node to an existing kubeadm cluster, but the join
+operation fails intermittently because of networking constraints and strict
+outbound rules, and later the join token expires before the node is fully added.
+In a scenario-based question, explain how you would prepare the node
+infrastructure to meet join prerequisites (runtime, ports, routing, DNS, time
+sync), how you would securely generate and manage join tokens and CA discovery
+information, and how you would verify the node becomes Ready and can schedule
+pods correctly after joining.
+
+Pregunta 15:
+A cluster built with kubeadm experiences a security audit finding that node
+certificates and bootstrap credentials are not being managed properly, and there
+is concern about long-lived tokens and stale certificates on replaced nodes. In
+a real-life cluster management scenario, explain how you would manage kubeadm-
+based cluster credentials (bootstrap tokens, certificate rotation/renewal,
+removing old nodes cleanly, resetting decommissioned nodes, and verifying that
+removed nodes no longer have access), and how you would align RBAC and
+ServiceAccount usage so that only authorized identities can perform sensitive
+cluster operations.
+
+Pregunta 16:
+Your organization is running a kubeadm-based Kubernetes cluster for a customer-
+facing SaaS, and leadership wants a clear “cluster lifecycle” plan that covers
+provisioning, day-2 operations, upgrades, scaling, and decommissioning. In a
+real scenario, describe how you would manage the lifecycle of the cluster from
+initial build through ongoing maintenance, including how you would standardize
+configurations, define health checks and SLOs, plan version upgrades and
+compatibility checks, and document repeatable procedures so the cluster can be
+recovered or rebuilt without relying on tribal knowledge.
+
+Pregunta 17:
+A new NetworkPolicy rollout is planned to lock down east-west traffic, but the
+application is complex and consists of multiple services that communicate across
+namespaces and ports. In a realistic rollout scenario, describe how you would
+design NetworkPolicies incrementally (starting from observation and allow-
+lists), how you would use labels and selectors to avoid brittle IP-based rules,
+and how you would test and enforce policies safely so you don’t cause a
+production outage.
+
+Pregunta 18:
+A developer applies a NetworkPolicy intended to allow ingress from the frontend
+pods to the backend pods on port 8080, but traffic is still blocked, and they
+insist the policy “looks correct.” In a troubleshooting scenario, explain how
+you would validate NetworkPolicy selectors and label matching, confirm whether
+the CNI actually enforces NetworkPolicies, check if there is a default-deny
+policy overriding it, and verify whether egress rules are also required for the
+connection to succeed.
+
+Pregunta 19:
+Your team needs to expose an internal service to external clients temporarily
+for a partner integration test, but it must be restricted and easy to disable
+afterward. In a scenario-based question, explain how you would choose between
+NodePort and LoadBalancer service types, how endpoints and external traffic
+policies influence routing and source IP preservation, and how you would combine
+service exposure with NetworkPolicies (or other controls) to limit who can
+access the service during the test window.
+
+Pregunta 20:
+An application uses a NodePort Service for external access, but users complain
+that half the requests fail depending on which node IP they hit. Inside the
+cluster, ClusterIP access works fine. In a real incident scenario, describe how
+you would troubleshoot NodePort connectivity (node firewall rules, kube-proxy
+programming, node-to-pod routing, health of endpoints), determine whether
+traffic is being routed to nodes without local endpoints, and decide whether
+adjusting externalTrafficPolicy or switching service types would fix the
+behavior.

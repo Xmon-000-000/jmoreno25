@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: critical-ns
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: critical-app
+  namespace: critical-ns
+  labels:
+    app: critical
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: critical
+  template:
+    metadata:
+      labels:
+        app: critical
+    spec:
+      containers:
+      - name: app
+        image: nginx
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: critical-svc
+  namespace: critical-ns
+spec:
+  selector:
+    app: critical
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: critical-policy
+  namespace: critical-ns
+spec:
+  podSelector:
+    matchLabels:
+      app: critical
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          access: allowed
+    ports:
+    - protocol: TCP
+      port: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client
+  namespace: critical-ns
+  labels:
+    access: allowed
+spec:
+  containers:
+  - name: curl
+    image: nicolaka/netshoot
+    command: ["sh","-c","sleep 3600"]

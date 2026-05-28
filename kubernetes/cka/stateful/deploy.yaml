@@ -1,0 +1,42 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: logger
+  namespace: stateful-lab
+spec:
+  serviceName: logger
+  replicas: 2
+  selector:
+    matchLabels:
+      app: logger
+  template:
+    metadata:
+      labels:
+        app: logger
+    spec:
+      containers:
+      - name: app
+        image: busybox
+        command:
+        - sh
+        - -c
+        - |
+          echo "Starting $(hostname)"
+          while true; do
+            echo "$(hostname) $(date)" >> /data/log.txt
+            sleep 5
+          done
+        volumeMounts:
+        - name: data
+          mountPath: /data
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
+

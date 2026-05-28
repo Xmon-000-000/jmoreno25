@@ -1,0 +1,92 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: a
+  namespace: net-lab
+  labels:
+    run: a
+spec:
+  containers:
+  - name: nginx
+    image: nicolaka/netshoot
+    ports:
+    - containerPort: 80
+    restartPolicy: Never
+    command: ["sh","-c","while true; do sleep 100; done"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: b
+  namespace: net-lab
+  labels:
+    run: b
+spec:
+  containers:
+  - name: nginx
+    image: nginx:stable
+    ports:
+    - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: b-svc
+  namespace: net-lab
+spec:
+  selector:
+    run: b
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: b
+  namespace: net-lab
+spec:
+  podSelector:
+    matchLabels:
+      run: b
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          run: a
+    ports:
+    - protocol: TCP
+      port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: a
+  namespace: net-lab
+spec:
+  podSelector:
+    matchLabels:
+      run: a
+  policyTypes:
+  - Egress
+  egress:
+    - to:
+      - ipBlock:
+          cidr: 172.217.171.46/32
+      - podSelector:
+          matchLabels:
+            run: b
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: kube-system
+      ports:
+      - protocol: UDP
+        port: 53
+      - protocol: TCP
+        port: 53
+      - protocol: TCP
+        port: 80

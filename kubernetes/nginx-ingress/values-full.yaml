@@ -1,0 +1,259 @@
+affinity: {}
+architecture: standalone
+auth:
+  acl:
+    enabled: false
+    existingFilePath: ""
+    existingSecret: ""
+    existingSecretACLKey: ""
+  enabled: true
+  existingSecret: ""
+  existingSecretPasswordKey: redis-password
+  password: ""
+  sentinel: true
+cluster:
+  announceHostnames: false
+  config:
+    nodeTimeout: 15000
+    requireFullCoverage: true
+  startupSleepTime: 0
+clusterDomain: cluster.local
+clusterInitJob:
+  resources: {}
+clusterReplicaCount: 0
+common:
+  global:
+    imagePullSecrets: []
+    imageRegistry: ""
+commonAnnotations: {}
+commonLabels: {}
+config:
+  content: |
+    # Redis configuration
+    bind * -::*
+  existingConfigmap: ""
+  existingConfigmapKey: ""
+  mountPath: /usr/local/etc/redis
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  privileged: false
+  readOnlyRootFilesystem: true
+  runAsGroup: 999
+  runAsNonRoot: true
+  runAsUser: 999
+  seccompProfile:
+    type: RuntimeDefault
+customScripts:
+  postStart:
+    command: []
+    enabled: false
+  preStop:
+    command: []
+    enabled: false
+extraConfig: ""
+extraEnvVars: []
+extraFlags: []
+extraObjects: []
+extraPorts: []
+extraVolumeMounts: []
+extraVolumes: []
+fullnameOverride: ""
+global:
+  imagePullSecrets: []
+  imageRegistry: ""
+image:
+  pullPolicy: Always
+  registry: docker.io
+  repository: redis
+  tag: 8.6.3@sha256:4d25e2fe601f7ffaeb4437cb6ced3518bc36edf34ebe98863c80836943d94529
+initContainer:
+  resources: {}
+ipFamily: auto
+livenessProbe:
+  enabled: true
+  failureThreshold: 6
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+metrics:
+  enabled: false
+  extraArgs: []
+  image:
+    pullPolicy: Always
+    registry: docker.io
+    repository: oliver006/redis_exporter
+    tag: v1.82.0-alpine@sha256:da9e89ee4e755bfa1b6a6b2ed345c2de63ca3976f95c9f1e9538882bc1414cb8
+  resources: {}
+  service:
+    annotations: {}
+    clusterIP: ""
+    ipFamilies: []
+    ipFamilyPolicy: ""
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    nodePort: ""
+    port: 9121
+    type: ClusterIP
+  serviceMonitor:
+    annotations: {}
+    enabled: false
+    honorLabels: false
+    interval: 30s
+    metricRelabelings: []
+    namespace: ""
+    namespaceSelector: {}
+    relabelings: []
+    scrapeTimeout: ""
+    selector: {}
+nameOverride: ""
+namespaceOverride: ""
+networkPolicy:
+  allowExternal: true
+  egressEnabled: true
+  enabled: false
+  extraEgress: []
+  extraIngress: []
+nodeSelector: {}
+pdb:
+  enabled: false
+  maxUnavailable: ""
+  minAvailable: 1
+persistence:
+  accessMode: ReadWriteOnce
+  annotations: {}
+  enabled: true
+  existingClaim: ""
+  mountPath: /data
+  size: 8Gi
+  storageClass: ""
+  subPath: ""
+persistentVolumeClaimRetentionPolicy:
+  enabled: false
+  whenDeleted: Retain
+  whenScaled: Retain
+podAnnotations: {}
+podLabels: {}
+podSecurityContext:
+  fsGroup: 999
+priorityClassName: ""
+readinessProbe:
+  enabled: true
+  failureThreshold: 6
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+replicaCount: 3
+resources: {}
+revisionHistoryLimit: 10
+sentinel:
+  config:
+    announceHostnames: true
+    loglevel: notice
+  discoveryTimeout: 3
+  downAfterMilliseconds: 1500
+  enabled: false
+  extraVolumeMounts: []
+  failoverTimeout: 15000
+  image:
+    pullPolicy: Always
+    registry: docker.io
+    repository: redis
+    tag: 8.6.1@sha256:1c054d54ecd1597bba52f4304bca5afbc5565ebe614c5b3d7dc5b7f8a0cd768d
+  livenessProbe:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  masterName: mymaster
+  masterService:
+    annotations: {}
+    checkInterval: 60
+    enabled: false
+    image:
+      pullPolicy: IfNotPresent
+      repository: alpine/kubectl
+      tag: 1.35.2
+    ipFamilies: []
+    ipFamilyPolicy: ""
+    resources: {}
+    type: ""
+    verbose: false
+  monitorTarget: ""
+  parallelSyncs: 1
+  port: 26379
+  preStop:
+    enabled: true
+  quorum: 2
+  readinessProbe:
+    enabled: true
+    failureThreshold: 6
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    successThreshold: 1
+    timeoutSeconds: 5
+  redisShutdownWaitFailover: true
+  resources: {}
+  service:
+    ipFamilies: []
+    ipFamilyPolicy: ""
+    port: 26379
+    type: ClusterIP
+service:
+  annotations: {}
+  clusterPort: 16379
+  headless:
+    annotations: {}
+    ipFamilies: []
+    ipFamilyPolicy: ""
+  ipFamilies: []
+  ipFamilyPolicy: ""
+  nodePort: ""
+  port: 6379
+  type: ClusterIP
+serviceAccount:
+  annotations: {}
+  automountServiceAccountToken: false
+  create: false
+  name: ""
+startupProbe:
+  enabled: false
+  failureThreshold: 30
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  successThreshold: 1
+  timeoutSeconds: 5
+terminationGracePeriodSeconds: 30
+tls:
+  authClients: true
+  certCAFilename: ca.crt
+  certFilename: tls.crt
+  certKeyFilename: tls.key
+  client:
+    certFilename: tls.crt
+    certKeyFilename: tls.key
+    existingSecret: ""
+  enabled: false
+  existingSecret: ""
+  port: 6380
+tolerations: []
+topologySpreadConstraints: []
+updateStrategy:
+  rollingUpdate:
+    maxUnavailable: 1
+  type: RollingUpdate
+useDeployment: false
+volumePermissions:
+  enabled: false
+  image:
+    pullPolicy: IfNotPresent
+    registry: docker.io
+    repository: busybox
+    tag: 1.36.1
+  resources: {}

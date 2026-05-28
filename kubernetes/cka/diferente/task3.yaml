@@ -1,0 +1,37 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: multi-lab
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sidecar-demo
+  namespace: multi-lab
+spec:
+  containers:
+  - name: writer
+    image: busybox:stable
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 5; echo `date` > /shared/date.txt; done"]
+    volumeMounts:
+    - mountPath: /shared
+      name: shared-volume
+  - name: reader
+    image: busybox:stable
+    ports:
+    - containerPort: 8080
+    command: ["sh","-c","while true; do sleep 5; cat /shared/date.txt; done"]
+    volumeMounts:
+    - mountPath: /shared
+      name: shared-volume
+  volumes:
+  - name: shared-volume
+    emptyDir: {} 
+  tolerations:
+  - key: "dedicated"
+    operator: "Equal"
+    value: "infra"
+    effect: "NoSchedule"

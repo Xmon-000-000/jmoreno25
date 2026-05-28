@@ -1,0 +1,86 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: core
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: basic-pod
+  namespace: core
+spec:
+  containers:
+  - name: nginx
+    image: busybox:1.36
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 100; done"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: health-pod
+  namespace: core
+spec:
+  containers:
+  - name: nginx-alpine
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","nginx -g 'daemon off;' && while true; do sleep 10; echo $MODE; done"]
+    readinessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 15
+      periodSeconds: 10
+    livenessProbe:
+      httpGet:
+        path: /
+        port: 80
+      initialDelaySeconds: 15
+      periodSeconds: 10
+    env:
+    - name: MODE
+      valueFrom:
+        configMapKeyRef:
+          name: core-config
+          key: MODE
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: core-config
+  namespace: core
+data:
+  MODE: core
+---
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apps
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: apps
+  labels:
+    app: nginx
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:does-not-exist
+        ports:
+        - containerPort: 80

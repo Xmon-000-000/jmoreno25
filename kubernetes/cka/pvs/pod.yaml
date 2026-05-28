@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+  namespace: selector-lab
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command:
+    - sh
+    - -c
+    - |
+      echo "Running on $(hostname)"
+      while true; do
+        date >> /data/out.txt
+        sleep 5
+      done
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: pvc-determinista-fast

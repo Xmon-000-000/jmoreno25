@@ -1,0 +1,29 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+  namespace: corp
+spec:
+  containers:
+  - name: app
+    image: busybox
+    command:
+    - sh
+    - -c
+    - |
+      echo "Starting writer"
+      i=0
+      while true; do
+        echo "$(date) line $i" >> /data/output.txt
+        i=$((i+1))
+        sleep 5
+      done
+    volumeMounts:
+    - name: data
+      mountPath: /data
+  volumes:
+  - name: data
+    hostPath:
+      path: /data/foo 
+      type: Directory

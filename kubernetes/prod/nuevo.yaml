@@ -1,0 +1,111 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: secure-app
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secret
+  namespace: secure-app
+type: Opaque
+stringData:
+  username: admin
+  password: supersecret
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-api
+  namespace: secure-app
+  labels:
+    app: nginx
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      securityContext:
+        runAsUser: 1000
+      containers:
+      - name: nginx
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
+        env:
+          - name: APP_USER
+            valueFrom:
+              secretKeyRef:
+                name: app-secret
+                key: username
+          - name: APP_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: app-secret
+                key: password
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          periodSeconds: 5
+          initialDelaySeconds: 5
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
+        volumeMounts:
+        - name: cache
+          mountPath: /var/cache/nginx
+        - name: run
+          mountPath: /var/run
+
+      volumes:
+      - name: cache
+        emptyDir: {}
+      - name: run
+        emptyDir: {}
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: secure-svc
+  namespace: secure-app
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: secure-api
+  namespace: secure-app
+spec:
+  podSelector:
+    matchLabels:
+      app: nginx
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: client
+    ports:
+    - protocol: TCP
+      port: 80

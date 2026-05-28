@@ -1,0 +1,246 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam-a
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busy
+  namespace: exam-a
+spec:
+  containers:
+  - name: busybox
+    image: busybox:1.36
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 15; echo $MODE; done"]
+    env:
+      - name: MODE
+        valueFrom:
+          configMapKeyRef:
+            name: app-config
+            key: MODE
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: exam-a
+data:
+  MODE: prod
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam-b
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: exam-b
+  labels:
+    app: nginx
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam-c
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: viewer-sa
+  namespace: exam-c
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: exam-c
+  name: pod-reader
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+# This role binding allows "jane" to read pods in the "default" namespace.
+# You need to already have a Role named "pod-reader" in that namespace.
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: exam-c
+subjects:
+# You can specify more than one "subject"
+- kind: ServiceAccount
+  name: viewer-sa
+roleRef:
+  kind: Role 
+  name: pod-reader
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam-d
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: broken
+  namespace: exam-d
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","while true; do sleep 5; echo FIXED; done"]
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-exam
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-exam
+  namespace: exam-d
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+  namespace: exam-d
+spec:
+  volumes:
+  - name: vol
+    hostPath:
+      path: /writer
+  containers:
+  - name: pv-recycler
+    image: "nginx:alpine"
+    command: ["/bin/sh", "-c", "while true; do sleep 5; echo timestamps >> /data/out.txt; done"]
+    volumeMounts:
+    - name: vol
+      mountPath: /data
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam-e
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-svc
+  namespace: exam-e
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minimal-ingress-exam-e
+  namespace: exam-e
+spec:
+  ingressClassName: nginx
+  rules:
+  - http: 
+      paths:
+      - path: /app
+        pathType: Prefix
+        backend:
+          service:
+            name: nginx-svc
+            port:
+              number: 80
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: exam-f 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-svc
+  namespace: exam-f
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: nginx:1.14.2
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test
+  namespace: exam-f
+spec:
+  containers:
+  - name: test
+    image: nginx:1.14.2
+    ports:
+    - containerPort: 80
+    command: ["sh","-c","curl http://backend-svc"]

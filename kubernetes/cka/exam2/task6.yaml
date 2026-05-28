@@ -1,0 +1,52 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: storage
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: writer
+  namespace: storage
+spec:
+  containers:
+    - name: fc-container
+      image: fedora:26
+      command: ["/bin/sh", "-c"]
+      args: [ "tail -f /dev/null" ]
+      volumeMounts:
+        - name: data
+          mountPath: /dev/xvda
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: pvc-writer
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-writer
+  namespace: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: noexiste
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-writer
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: noexiste
+  hostPath:
+    path: /mnt/kk

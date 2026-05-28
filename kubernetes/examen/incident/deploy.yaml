@@ -1,0 +1,28 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cpu-burn
+  namespace: ops-incident
+  labels:
+    app: cpu-burn
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: cpu-burn
+  template:
+    metadata:
+      labels:
+        app: cpu-burn
+    spec:
+      containers:
+      - name: busybox
+        image: busybox
+        ports:
+        - containerPort: 80
+        command: ["sh","-c","while true; do ls -ltrR / > /dev/null; done"]
+        resources:
+          requests:
+            cpu: 200m
+            memory: 64Mi

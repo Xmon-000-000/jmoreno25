@@ -1,0 +1,44 @@
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: almacenamiento
+provisioner: kubernetes.io/gce-pd
+parameters:
+  type: pd-ssd
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: almacenamiento
+  resources:
+    requests:
+      storage: 3Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: staging
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: fast
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prod
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: almacenamiento
+  resources:
+    requests:
+      storage: 30Gi
