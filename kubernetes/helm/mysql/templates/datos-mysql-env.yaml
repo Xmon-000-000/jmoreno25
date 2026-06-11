@@ -15,4 +15,4 @@ data:
 kind: ConfigMap
 metadata:
   name: {{.Release.Name}}-datos-mysql-env
-  namespace: {{.Values.namespace}}
+  namespace: {{.Release.Namespace}}
