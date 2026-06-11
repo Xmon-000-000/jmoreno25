@@ -33,7 +33,7 @@ metadata:
   name: frontend-svc
   namespace: selector-lab
 spec:
-  selector:
+  
   ports:
     - protocol: TCP
       port: 80

@@ -1,0 +1,7 @@
+        resources:
+          limits:
+              memory: {{.Values.limites.memoria}}
+              cpu: {{.Values.limites.cpu}}
+          requests:
+              memory: {{.Values.peticiones.memoria}} 
+              cpu: {{.Values.peticiones.cpu}}
