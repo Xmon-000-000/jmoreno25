@@ -1,0 +1,71 @@
+################### 
+# Docker Commands #
+###################
+
+sudo docker info
+
+sudo docker images
+
+
+sudo docker pull nginx:trixie-perl -> Descargar oficial imagenes
+
+sudo docker build --tag nginx_ubuntu .
+
+Dockerfile
+FROM fedora:43
+RUN yum update -y && yum install nginx -y
+
+sudo docker history -H nginx_fedora:latest
+
+Contenedores
+-------------
+sudo docker ps
+
+Delete container
+----------------
+fjmoreno@KM-5CD242HTHV:~/Docker/images$ sudo docker ps -a
+CONTAINER ID   IMAGE         COMMAND    CREATED        STATUS                      PORTS     NAMES
+b634fe36ea74   ubuntu        "bash"     17 hours ago   Exited (130) 17 hours ago             jovial_banzai
+7adf7701dc9b   hello-world   "/hello"   17 hours ago   Exited (0) 17 hours ago               practical_carson
+
+sudo docker rm -fv 7adf7701dc9b   ---> -fv lo elimina aunque esté corriendo el contenedor
+sudo docker rm b634fe36ea74
+
+Construir contenedor nginx desde la imagen nginx_fedora:nginx_cmd
+-----------------------------------------------------------------
+fjmoreno@KM-5CD242HTHV:~/Docker/images$ sudo docker run -d --name nginx -p 80:80 nginx_fedora:nginx_cmd
+15042f18785d17fb19f2a6cea8b49f3d1226ce992e078facb8e8ea742a431576
+fjmoreno@KM-5CD242HTHV:~/Docker/images$
+
+Arrancar conetenedor bash - dir ~/Docker/bash_container
+-------------------------------------------------------
+sudo docker run -it ubuntu_bash
+
+Acceder al contenedor nginx
+---------------------------
+sudo docker exec -ti nginx bash
+sudo docker exec -u pepito -ti nginx bash
+
+Recursos consumidos por un contenedor
+-------------------------------------
+sudo docker stats nginx
+
+-------------------------------------
+
+    spec:
+      containers:
+      - name: backend-fecha
+        image: fecha-hora:latest
+        imagePullPolicy: IfNotPresent ---------------------------------------------
+        ports:
+          - containerPort: 8080
+
+---------------------------------------
+
+- Construir imagen en minikube - 
+eval $(minikube docker-env)
+docker build -t nginx_fecha:latest .
+
+docker run --rm nginx:1.29.8-alpine ls -lh /
+
+kubectl rollout restart deployment frontend-fecha

@@ -1,0 +1,26 @@
+########################
+# 20260408 - Miercoles #
+########################
+
+- Ya tengo equipo 
+
+VPN
+https://vpn.knowmadmood.com:1194
+https://digitaldesktop.knowmadmood.com
+
+portatiles
+https://www.pccomponentes.com/portatil-replay-hp-elitebook-840-g7-intel-core-i5-10310u-16gb-256gb-ssd-14-refurbished
+1,33kg
+
+RedHat
+.S1st3m4s.12345
+
+Para probarlo:
+pip install markitdown
+markitdown documento.pdf > resultado.md
+
+Busqueda de trabajo en localhost
+https://github.com/nbgabriel/job-radar/blob/main/README.md
+
+CKA
+https://medium.com/@john.a.bermudez/the-cka-isnt-just-a-kubernetes-exam-it-s-a-time-management-exam-146a25c8e5c4

@@ -12,6 +12,7 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: "/test"
+    type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: PersistentVolume
@@ -27,6 +28,7 @@ spec:
     - ReadWriteOnce
   hostPath:
     path: "/mysql"
+    type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -39,4 +41,19 @@ spec:
   resources:
     requests:
       storage: 10Gi
-
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: task-pv-claim-mysql
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+      mysql: ready
+  
