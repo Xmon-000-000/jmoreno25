@@ -36,8 +36,8 @@ metadata:
 spec:
   volumes:
   - name: vol
-    hostPath:
-      path: /local-mysql
+    persistentVolumeClaim:
+      claimName: test-claim
   containers:
   - name: container-pod-pvc
     image: nginx:alpine

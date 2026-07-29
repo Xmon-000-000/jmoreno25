@@ -1,0 +1,236 @@
+Recursos del curso: https://github.com/ricardoandre97/k8s-resources
+
+
+minikube status
+
+minikube start
+
+minikube stop
+
+minikube delete
+
+kubectl get pods
+
+kubectl get nodes
+
+kubectl create deployment nginx --image=nginx:alpine
+
+~/GIT/jmoreno25/kubernetes$ kubectl get pods
+NAME                     READY   STATUS    RESTARTS   AGE
+nginx-6658f59756-qk4fg   1/1     Running   0          49s
+
+kubectl describe pod nginx-6658f59756-qk4fg
+
+kubectl api-resources
+
+Eliminar pods
+-------------
+kubectl get deployments
+kubectl get replicasets
+
+fjmoreno@KM-5CD242HTHV:~/GIT/jmoreno25/kubernetes$ kubectl scale deployment nginx3 --replicas=0
+deployment.apps/nginx3 scaled
+fjmoreno@KM-5CD242HTHV:~/GIT/jmoreno25/kubernetes$ kubectl delete deployment nginx3
+deployment.apps "nginx3" deleted from default namespace
+
+
+-----------------------------------------------------------
+
+kubectl get pods nginx-6658f59756-qk4fg -o yaml
+
+kubectl create deployment nginx3 --image=nginx:alpine --port=80
+
+kubectl port-forward nginx3-5fb7bff898-kns92 7000:80   (http://localhost:7000)
+
+kubectl exec -ti nginx-6658f59756-qk4fg -- sh ( para entrar en el pod )
+kubectl run -ti nginx --image=nginx:1.29.8-alpine -- sh ( entrar en una imagen )
+
+kubectl logs nginx3-5fb7bff898-kns92 ( -f )
+
+Manifest (YAML)
+---------------
+
+apiVersion: v1  # kubectl api-versions
+kind: Pod       # kubectl api-resources
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+
+--------------------------------------------------------------------
+
+###############
+# Deployments #
+###############
+
+kubectl get deploy --show-labels
+
+kubectl rollout status deployment nginx-deployment
+
+kubectl rollout history deployment nginx-deployment
+
+kubectl rollout history deployment nginx-deployment --revision=5
+
+kubectl get svc -l app=nginx
+
+kubectl get endpoints
+
+kubectl get pods -l app=nginx -o wide ( muestra las IPs de los pods )
+
+minikube service backend-service
+
+minikube ssh
+
+kubectl port-forward svc/backend-service 8080:8080
+
+###################
+# namespaces #
+##############
+
+kubectl get namespaces
+
+kubectl create namespace mio
+
+kubectl get namespaces --show-labels
+
+kubectl describe namespace mio
+
+- Crear
+kubectl apply -f ns.yaml
+
+ns.yaml <
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: development-space
+  labels:
+    env: dev
+
+- Borrar
+kubectl delete namespace mio development-space
+
+##########
+# DNS #
+##########
+
+serviceName + namespace + svc.cluster.local
+backend-fecha.ci.svc.cluster.local
+
+##############
+# contexto #
+############
+
+kubectl config current-context
+minikube
+
+cat $HOME/.kube/config 
+
+kubectl config view
+
+kubectl config set-context [NAME | --current] [--cluster=cluster_nickname] [--user=user_nickname] [--namespace=namespace]
+kubectl config set-context ci.context --namespace=ci --cluster=minikube --user=minikube
+
+kubectl config view
+
+kubectl config use-context ci.context
+
+kubectl config use-context minikube  -  context default
+
+kubectl get deploy backend-deployment -n rquota -o yaml
+
+kubectl run --rm -ti nginx --image=nginx:alpine -- sh
+
+##############################
+#  ConfigMaps #
+###############
+
+kubectl create configmap nginx-config --from-file=configMaps/nginx-map.yaml
+kubectl create configmap nginx-config --from-file=configMaps  ( todos los ficheros de la carpeta )
+
+###########
+# Secrets #
+###########
+
+kubectl create secret generic mysecret --from-file=./secret-files/test.txt
+
+kubectl get secret mysecret -o yaml
+
+echo c2VjcmV0MT1wZXBpdG8Kc2VjcmV0Mj1hbnRvw7FpdG8K | base64 --decode
+
+export USER=jmoreno PASSWD=mipasswd
+envsubst < secure.yaml > tmp.yaml
+
+##################
+# PV y PVC #
+############
+
+kubectl describe pvc hostpath
+
+######################
+# Tokens #
+#####################
+
+kubectl exec [nombre-pod] -- cat /var/run/secrets/kubernetes.io/serviceaccount/token
+
+jwt - jason web token 
+se decodifica en la web: https://www.jwt.io/
+devuelve una salida de este tipo:
+
+{
+  "aud": [
+    "https://kubernetes.default.svc.cluster.local"
+  ],
+  "exp": 1808385951,
+  "iat": 1776849951,
+  "iss": "https://kubernetes.default.svc.cluster.local",
+  "kubernetes.io": {
+    "namespace": "default",
+    "pod": {
+      "name": "nginx-deployment-7df8df9957-5tns9",
+      "uid": "3bde4ee1-bd3c-4cbc-825c-251581c3883d"
+    },
+    "serviceaccount": {
+      "name": "default",
+      "uid": "931cb02c-a5b1-450a-8bfa-40c9e9d3adda"
+    },
+    "warnafter": 1776853558
+  },
+  "nbf": 1776849951,
+  "sub": "system:serviceaccount:default:default"
+}
+
+-----------------------------------------------------------
+Acceder desde un pod al api con un serviceaccount
+----------------------------------------------------
+
+buscar "kubernetes api references"
+
+TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+curl -H "Authorization: Bearer ${TOKEN}" https://kubernetes/api/v1/namespaces/default/pods -k
+
+###########################
+# INGRESS #
+##############################
+
+NGinxs: este comando instala en nginxs para ingress:
+minikube addons enable ingress
+
+kubectl get ns | grep ingre
+  ingress-nginx     Active   64s
+
+kubectl get pods -n ingress-nginx
+  NAME                                        READY   STATUS      RESTARTS   AGE
+  ingress-nginx-admission-create-xxjqn        0/1     Completed   0          102s
+  ingress-nginx-admission-patch-q2cq8         0/1     Completed   1          102s
+  ingress-nginx-controller-68b584b5b6-cj72z   1/1     Running     0          102s
+
+Port-forwarding
+minikube service ingress-nginx-controller --url -n ingress-nginx 
+
+kubectl -n ingress-nginx get svc ingress-nginx-controller -o wide
+

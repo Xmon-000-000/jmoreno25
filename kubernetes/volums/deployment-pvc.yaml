@@ -46,7 +46,6 @@ spec:
     metadata:
       labels:
         app: mysql
-        system: mysql-label
     spec:
       containers:
       - name: mysql
