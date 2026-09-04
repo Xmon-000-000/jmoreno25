@@ -1,0 +1,37 @@
++----+--------------------------------------------------------------------------------------------------+
+2
+| Nº | Cómo funciona Docker internamente |
+3
++----+--------------------------------------------------------------------------------------------------+
+4
+| 1 | docker build lee el Dockerfile línea por línea y usa el directorio actual como contexto. |
+5
+| 2 | Cada instrucción del Dockerfile crea una nueva capa de imagen almacenada por Docker. |
+6
+| 3 | Docker utiliza OverlayFS (u otro union filesystem) para combinar capas en un único filesystem. |
+7
+| 4 | docker run añade una capa escribible sobre la imagen para crear el contenedor. |
+8
+| 5 | Un contenedor es un proceso aislado que usa namespaces y cgroups de Linux. |
+9
+| 6 | Namespaces aíslan recursos; cgroups controlan CPU, RAM y E/S. |
+10
+| 7 | Docker asigna una interfaz de red virtual conectada normalmente al bridge docker0. |
+11
+| 8 | El parámetro -p configura reglas iptables para redirigir tráfico al contenedor. |
+12
+| 9 | El daemon dockerd gestiona imágenes, contenedores, volúmenes y redes en segundo plano. |
+13
+| 10 | La CLI de Docker se comunica con dockerd mediante API REST usando Unix socket o TCP. |
+14
+| 11 | Los volúmenes viven fuera del contenedor y se almacenan en /var/lib/docker/volumes. |
+15
+| 12 | Los cambios dentro del contenedor son temporales salvo que se guarden en volúmenes o imágenes. |
+16
+| 13 | Docker usa hashes de contenido para reutilizar y cachear capas eficientemente. |
+17
+| 14 | Al hacer push, Docker solo sube las capas que no existen ya en el registry. |
+18
+| 15 | La publicación original recomienda un boletín sobre DevOps y Cloud para ampliar información. |
+19
++----+--------------------------------------------------------------------------------------------------+
